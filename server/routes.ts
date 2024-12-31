@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { checkPermission } from "./middleware/rbac";
 import { db } from "@db";
 import { leads, activities, users } from "@db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   setupAuth(app);
@@ -45,16 +45,16 @@ export function registerRoutes(app: Express): Server {
 
   // Stats route
   app.get("/api/stats", checkPermission("stats", "read"), async (req, res) => {
-    const [leadStats] = await db
+    const [stats] = await db
       .select({
-        totalLeads: db.fn.count(leads.id),
-        toContact: db.fn.count(leads.id).filter(eq(leads.status, "New")),
-        qualified: db.fn.count(leads.id).filter(eq(leads.status, "Qualified")),
-        revenue: db.fn.sum(leads.budget).filter(eq(leads.status, "Qualified")),
+        totalLeads: sql<number>`count(${leads.id})::int`,
+        toContact: sql<number>`count(case when ${leads.status} = 'New' then 1 end)::int`,
+        qualified: sql<number>`count(case when ${leads.status} = 'Qualified' then 1 end)::int`,
+        revenue: sql<number>`coalesce(sum(case when ${leads.status} = 'Qualified' then ${leads.budget} end), 0)::int`,
       })
       .from(leads);
 
-    res.json(leadStats);
+    res.json(stats);
   });
 
   const httpServer = createServer(app);
