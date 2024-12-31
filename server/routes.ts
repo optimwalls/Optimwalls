@@ -11,12 +11,10 @@ export function registerRoutes(app: Express): Server {
 
   // Lead routes
   app.get("/api/leads", checkPermission("leads", "read"), async (req, res) => {
-    const allLeads = await db.query.leads.findMany({
-      with: {
-        assignedUser: true,
-        activities: true,
-      },
-    });
+    const allLeads = await db.select().from(leads).leftJoin(
+      activities,
+      eq(activities.leadId, leads.id)
+    );
     res.json(allLeads);
   });
 
@@ -36,6 +34,11 @@ export function registerRoutes(app: Express): Server {
 
   // Activity routes
   app.post("/api/activities", checkPermission("activities", "create"), async (req, res) => {
+    // Ensure user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const activity = await db
       .insert(activities)
       .values({ ...req.body, userId: req.user.id })
