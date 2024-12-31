@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Phone, DollarSign, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Mail, Phone, DollarSign, Calendar, Building2, Star, MessageSquare } from "lucide-react";
 import type { Lead } from "@db/schema";
 
 interface LeadCardProps {
@@ -24,6 +25,12 @@ export default function LeadCard({ lead, onClick }: LeadCardProps) {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-500";
+    if (score >= 60) return "text-yellow-500";
+    return "text-gray-500";
+  };
+
   return (
     <Card
       className="mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -31,10 +38,28 @@ export default function LeadCard({ lead, onClick }: LeadCardProps) {
     >
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
-          <h3 className="font-semibold truncate">{lead.name}</h3>
-          <Badge variant="secondary" className={getStatusColor(lead.status)}>
-            {lead.status}
-          </Badge>
+          <div>
+            <h3 className="font-semibold truncate">{lead.name}</h3>
+            <div className="flex items-center gap-1 mt-1">
+              <Badge variant="secondary" className={getStatusColor(lead.status)}>
+                {lead.status}
+              </Badge>
+              {lead.projectType && (
+                <Badge variant="outline" className="ml-1">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  {lead.projectType}
+                </Badge>
+              )}
+            </div>
+          </div>
+          {lead.score !== null && (
+            <div className="flex items-center">
+              <Star className={`h-4 w-4 ${getScoreColor(lead.score)}`} />
+              <span className={`text-sm ml-1 ${getScoreColor(lead.score)}`}>
+                {lead.score}
+              </span>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2 space-y-2">
@@ -49,7 +74,7 @@ export default function LeadCard({ lead, onClick }: LeadCardProps) {
         {lead.budget && (
           <div className="flex items-center text-sm text-muted-foreground">
             <DollarSign className="h-4 w-4 mr-2" />
-            {lead.budget.toLocaleString()}
+            ${lead.budget.toLocaleString()}
           </div>
         )}
         <div className="flex items-center text-xs text-muted-foreground">
@@ -61,6 +86,16 @@ export default function LeadCard({ lead, onClick }: LeadCardProps) {
             {lead.notes}
           </p>
         )}
+
+        <div className="flex gap-2 mt-4">
+          <Button variant="outline" size="sm" className="flex-1">
+            <MessageSquare className="h-4 w-4 mr-2" />
+            Follow Up
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1">
+            View Details
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
