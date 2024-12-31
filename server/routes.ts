@@ -5,6 +5,7 @@ import authRoutes from "./services/auth/routes";
 import leadRoutes from "./services/leads/routes";
 import clientRoutes from "./services/clients/routes";
 import activityRoutes from "./services/activities/routes";
+import dashboardRoutes from "./services/dashboard/routes";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -32,6 +33,7 @@ export function registerRoutes(app: Express): Server {
   app.use("/api/leads", leadRoutes);
   app.use("/api/clients", clientRoutes);
   app.use("/api/activities", activityRoutes);
+  app.use("/api/stats", dashboardRoutes);
 
   // Error handling middleware
   app.use((err: any, _req: any, res: any, next: any) => {
