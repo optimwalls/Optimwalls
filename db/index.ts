@@ -1,32 +1,27 @@
-import pkg from 'pg';
-const { Pool } = pkg;
-import { drizzle } from "drizzle-orm/node-postgres";
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from "drizzle-orm/neon-http";
 import * as schema from "@db/schema";
 
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
-// Ensure SSL mode is properly set in connection URL
+// Configure database URL with SSL
 let connectionString = process.env.DATABASE_URL;
 if (!connectionString.includes('sslmode=')) {
   connectionString += '?sslmode=require';
 }
 
-const pool = new Pool({
-  connectionString,
-  ssl: {
-    rejectUnauthorized: false
-  },
-  max: 20,
-  idleTimeoutMillis: 60000,
-  connectionTimeoutMillis: 10000,
-});
+// Create the SQL connection
+const sql = neon(connectionString);
 
-// Test the connection
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-  process.exit(-1);
-});
+// Initialize Drizzle with the schema
+export const db = drizzle(sql, { schema });
 
-export const db = drizzle(pool, { schema });
+// Test the connection by executing a simple query
+sql`SELECT 1`.then(() => {
+  console.log('Database connection established successfully');
+}).catch(err => {
+  console.error('Failed to connect to database:', err);
+  process.exit(1);
+});

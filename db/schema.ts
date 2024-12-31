@@ -1,19 +1,58 @@
-import { pgTable, text, serial, integer, timestamp, json, boolean, decimal, date } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 import { relations, type InferModel } from "drizzle-orm";
+import { json, date, decimal } from "drizzle-orm/pg-core";
 
-// Users and Auth
+
+// Email verification tokens table
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Password reset tokens table
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Update users table with email verification
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
   roleId: integer("role_id").references(() => roles.id).notNull(),
   email: text("email").unique(),
+  isEmailVerified: boolean("is_email_verified").default(false),
+  emailVerifiedAt: timestamp("email_verified_at"),
   fullName: text("full_name"),
   department: text("department"),
   position: text("position"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Enhanced validation schema for user
+export const insertUserSchema = createInsertSchema(users, {
+  email: z.string().email("Invalid email format").min(1, "Email is required"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .regex(/^[a-zA-Z0-9._-]+$/, "Username can only contain letters, numbers, dots, underscores, and hyphens"),
 });
 
 export const roles = pgTable("roles", {
@@ -30,7 +69,6 @@ export const permissions = pgTable("permissions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// HR Management
 export const employees = pgTable("employees", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -49,7 +87,6 @@ export const employees = pgTable("employees", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Finance Management
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(), // Income, Expense
@@ -65,7 +102,6 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Projects and Production
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -85,7 +121,6 @@ export const projects = pgTable("projects", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Vendor Management
 export const vendors = pgTable("vendors", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -105,7 +140,6 @@ export const vendors = pgTable("vendors", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Quotations
 export const quotations = pgTable("quotations", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id),
@@ -125,7 +159,6 @@ export const quotations = pgTable("quotations", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Design Management
 export const designs = pgTable("designs", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id),
@@ -143,7 +176,6 @@ export const designs = pgTable("designs", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Support Tickets
 export const supportTickets = pgTable("support_tickets", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id").references(() => clients.id),
@@ -158,7 +190,6 @@ export const supportTickets = pgTable("support_tickets", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Knowledge Base
 export const knowledgeBase = pgTable("knowledge_base", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -175,7 +206,6 @@ export const knowledgeBase = pgTable("knowledge_base", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Sustainability Metrics
 export const sustainabilityMetrics = pgTable("sustainability_metrics", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id),
@@ -193,7 +223,6 @@ export const sustainabilityMetrics = pgTable("sustainability_metrics", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Continue existing tables with updated relations
 export const leads = pgTable("leads", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -242,7 +271,6 @@ export const activities = pgTable("activities", {
 });
 
 
-// Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
     fields: [users.roleId],
@@ -326,7 +354,6 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   transactions: many(transactions),
 }));
 
-
 export const vendorsRelations = relations(vendors, ({ many }) => ({
   transactions: many(transactions),
 }));
@@ -390,8 +417,6 @@ export const sustainabilityMetricsRelations = relations(sustainabilityMetrics, (
   }),
 }));
 
-// Schemas
-export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
 export const insertLeadSchema = createInsertSchema(leads);
 export const selectLeadSchema = createSelectSchema(leads);
@@ -423,7 +448,6 @@ export const insertSustainabilityMetricsSchema = createInsertSchema(sustainabili
 export const selectSustainabilityMetricsSchema = createSelectSchema(sustainabilityMetrics);
 
 
-// Types
 export type User = InferModel<typeof users>;
 export type NewUser = InferModel<typeof users, "insert">;
 export type Lead = InferModel<typeof leads>;
@@ -455,7 +479,6 @@ export type NewKnowledgeBase = InferModel<typeof knowledgeBase, "insert">;
 export type SustainabilityMetric = InferModel<typeof sustainabilityMetrics>;
 export type NewSustainabilityMetric = InferModel<typeof sustainabilityMetrics, "insert">;
 
-// Fix the Express User type declaration
 declare global {
   namespace Express {
     interface User {

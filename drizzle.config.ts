@@ -1,28 +1,22 @@
-import { defineConfig } from "drizzle-kit";
-import { config } from "dotenv";
-
-config(); // Load environment variables from .env file
+import type { Config } from "drizzle-kit";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required. Please ensure the database is provisioned.");
+  throw new Error("DATABASE_URL environment variable is required");
 }
 
-// Ensure SSL mode is properly set in connection URL
+// Configure database URL with SSL
 let connectionString = process.env.DATABASE_URL;
 if (!connectionString.includes('sslmode=')) {
   connectionString += '?sslmode=require';
 }
 
-export default defineConfig({
+export default {
   schema: "./db/schema.ts",
   out: "./migrations",
-  dialect: "postgresql",
+  driver: 'pg',
   dbCredentials: {
-    connectionString,
-    ssl: {
-      rejectUnauthorized: false
-    }
+    connectionString: connectionString,
   },
   verbose: true,
   strict: true,
-});
+} satisfies Config;
