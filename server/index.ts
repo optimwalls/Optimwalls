@@ -1,8 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { setupRoles } from "./init/setupRoles";
-import { setupDatabase } from "./init/setupDatabase";
+import { initializeRBAC } from "./init/rbac";
+import { initDb } from "@db";
 
 const app = express();
 
@@ -50,13 +50,15 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // Initialize application
 (async () => {
   try {
-    // Initialize database
-    await setupDatabase();
-    log("Database setup complete");
+    // Initialize database first
+    log("Starting database initialization...");
+    await initDb();
+    log("Database initialization completed");
 
-    // Initialize roles and permissions
-    await setupRoles();
-    log("Roles and permissions initialized");
+    // Initialize RBAC after database is ready
+    log("Starting roles and permissions initialization...");
+    await initializeRBAC();
+    log("Roles and permissions initialization completed");
 
     // Register routes after all initialization is complete
     const server = registerRoutes(app);
