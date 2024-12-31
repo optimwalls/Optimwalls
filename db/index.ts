@@ -1,29 +1,20 @@
-import pkg from 'pg';
-const { Pool } = pkg;
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from 'pg';
 import * as schema from "@db/schema";
 
 if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL environment variable is required",
-  );
+  throw new Error("DATABASE_URL environment variable is required");
 }
 
-// Configure database URL with SSL
-let connectionString = process.env.DATABASE_URL;
-if (!connectionString.includes('sslmode=')) {
-  connectionString += '?sslmode=require';
-}
-
-// Create a PostgreSQL pool with advanced configuration
+// Create PostgreSQL pool with proper configuration
 const pool = new Pool({
-  connectionString,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+  connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false // Required for some PostgreSQL providers
-  }
+  },
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 2000 // Return an error after 2 seconds if connection could not be established
 });
 
 // Initialize Drizzle with the schema
@@ -33,22 +24,21 @@ export const db = drizzle(pool, { schema });
 async function initializeDatabase(retries = 5, delay = 2000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      // Test both connection and transaction support
       const client = await pool.connect();
       try {
-        await client.query('BEGIN');
-        await client.query('SELECT 1');
-        await client.query('COMMIT');
-        console.log('Database connection and transaction support verified successfully');
+        await client.query('BEGIN'); //Added from original code for transaction testing
+        await client.query('SELECT 1'); // Simple query to test connection
+        await client.query('COMMIT'); //Added from original code for transaction testing
+        console.log('Database connection and transaction support verified successfully'); //Modified to reflect transaction test
         client.release();
         return true;
       } catch (err) {
-        await client.query('ROLLBACK');
+        await client.query('ROLLBACK'); //Added from original code for transaction rollback
         client.release();
         throw err;
       }
     } catch (err) {
-      console.error(`Attempt ${attempt}/${retries} failed:`, err);
+      console.error(`Database connection attempt ${attempt}/${retries} failed:`, err);
       if (attempt === retries) {
         console.error('Failed to connect to database after all retries');
         return false;
@@ -89,7 +79,7 @@ process.on('unhandledRejection', (err) => {
   });
 });
 
-// Export transaction helper
+// Export transaction helper (from original code)
 export async function withTransaction<T>(
   callback: (client: any) => Promise<T>
 ): Promise<T> {
