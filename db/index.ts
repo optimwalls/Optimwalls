@@ -7,12 +7,17 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required");
 }
 
+// Ensure SSL mode is properly set in connection URL
+let connectionString = process.env.DATABASE_URL;
+if (!connectionString.includes('sslmode=')) {
+  connectionString += '?sslmode=require';
+}
+
 const pool = new Pool({
-  host: process.env.PGHOST,
-  port: Number(process.env.PGPORT),
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false
+  },
   max: 20,
   idleTimeoutMillis: 60000,
   connectionTimeoutMillis: 10000,

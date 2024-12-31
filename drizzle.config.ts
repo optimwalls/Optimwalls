@@ -7,16 +7,21 @@ if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL environment variable is required. Please ensure the database is provisioned.");
 }
 
+// Ensure SSL mode is properly set in connection URL
+let connectionString = process.env.DATABASE_URL;
+if (!connectionString.includes('sslmode=')) {
+  connectionString += '?sslmode=require';
+}
+
 export default defineConfig({
   schema: "./db/schema.ts",
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {
-    host: process.env.PGHOST!,
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE!,
-    port: Number(process.env.PGPORT),
+    connectionString,
+    ssl: {
+      rejectUnauthorized: false
+    }
   },
   verbose: true,
   strict: true,
