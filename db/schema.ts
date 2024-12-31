@@ -1,9 +1,7 @@
-import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, boolean, json, date, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations, type InferModel } from "drizzle-orm";
-import { json, date, decimal } from "drizzle-orm/pg-core";
-
 
 // Email verification tokens table
 export const emailVerificationTokens = pgTable("email_verification_tokens", {
@@ -271,6 +269,90 @@ export const activities = pgTable("activities", {
 });
 
 
+// Marketing Module Tables
+export const marketingCampaigns = pgTable("marketing_campaigns", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // Email, Social, Print, Digital
+  status: text("status").notNull(), // Draft, Active, Completed, Paused
+  budget: decimal("budget", { precision: 10, scale: 2 }),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  targetAudience: json("target_audience").$type<{
+    demographics: Record<string, any>;
+    interests: string[];
+    location: string[];
+  }>(),
+  metrics: json("metrics").$type<{
+    reach: number;
+    engagement: number;
+    conversions: number;
+    roi: number;
+  }>(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const marketingLeads = pgTable("marketing_leads", {
+  id: serial("id").primaryKey(),
+  campaignId: integer("campaign_id").references(() => marketingCampaigns.id),
+  leadId: integer("lead_id").references(() => leads.id),
+  source: text("source").notNull(),
+  convertedAt: timestamp("converted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Website Module Tables
+export const websiteContent = pgTable("website_content", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // Page, Blog, Portfolio, Testimonial
+  title: text("title").notNull(),
+  slug: text("slug").unique().notNull(),
+  content: text("content").notNull(),
+  status: text("status").notNull(), // Draft, Published, Archived
+  seo: json("seo").$type<{
+    metaTitle: string;
+    metaDescription: string;
+    keywords: string[];
+  }>(),
+  publishedAt: timestamp("published_at"),
+  author: integer("author").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const portfolioProjects = pgTable("portfolio_projects", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  featured: boolean("featured").default(false),
+  images: json("images").$type<{
+    url: string;
+    caption: string;
+    order: number;
+  }[]>(),
+  category: text("category").notNull(),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const websiteEnquiries = pgTable("website_enquiries", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  message: text("message").notNull(),
+  status: text("status").notNull(), // New, Contacted, Converted, Closed
+  assignedTo: integer("assigned_to").references(() => users.id),
+  convertedToLeadId: integer("converted_to_lead_id").references(() => leads.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
     fields: [users.roleId],
@@ -417,6 +499,50 @@ export const sustainabilityMetricsRelations = relations(sustainabilityMetrics, (
   }),
 }));
 
+export const marketingCampaignsRelations = relations(marketingCampaigns, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [marketingCampaigns.createdBy],
+    references: [users.id],
+  }),
+  leads: many(marketingLeads),
+}));
+
+export const marketingLeadsRelations = relations(marketingLeads, ({ one }) => ({
+  campaign: one(marketingCampaigns, {
+    fields: [marketingLeads.campaignId],
+    references: [marketingCampaigns.id],
+  }),
+  lead: one(leads, {
+    fields: [marketingLeads.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export const websiteContentRelations = relations(websiteContent, ({ one }) => ({
+  authorUser: one(users, {
+    fields: [websiteContent.author],
+    references: [users.id],
+  }),
+}));
+
+export const portfolioProjectsRelations = relations(portfolioProjects, ({ one }) => ({
+  project: one(projects, {
+    fields: [portfolioProjects.projectId],
+    references: [projects.id],
+  }),
+}));
+
+export const websiteEnquiriesRelations = relations(websiteEnquiries, ({ one }) => ({
+  assignedUser: one(users, {
+    fields: [websiteEnquiries.assignedTo],
+    references: [users.id],
+  }),
+  convertedLead: one(leads, {
+    fields: [websiteEnquiries.convertedToLeadId],
+    references: [leads.id],
+  }),
+}));
+
 export const selectUserSchema = createSelectSchema(users);
 export const insertLeadSchema = createInsertSchema(leads);
 export const selectLeadSchema = createSelectSchema(leads);
@@ -446,7 +572,14 @@ export const insertKnowledgeBaseSchema = createInsertSchema(knowledgeBase);
 export const selectKnowledgeBaseSchema = createSelectSchema(knowledgeBase);
 export const insertSustainabilityMetricsSchema = createInsertSchema(sustainabilityMetrics);
 export const selectSustainabilityMetricsSchema = createSelectSchema(sustainabilityMetrics);
-
+export const insertMarketingCampaignSchema = createInsertSchema(marketingCampaigns);
+export const selectMarketingCampaignSchema = createSelectSchema(marketingCampaigns);
+export const insertWebsiteContentSchema = createInsertSchema(websiteContent);
+export const selectWebsiteContentSchema = createSelectSchema(websiteContent);
+export const insertPortfolioProjectSchema = createInsertSchema(portfolioProjects);
+export const selectPortfolioProjectSchema = createSelectSchema(portfolioProjects);
+export const insertWebsiteEnquirySchema = createInsertSchema(websiteEnquiries);
+export const selectWebsiteEnquirySchema = createSelectSchema(websiteEnquiries);
 
 export type User = InferModel<typeof users>;
 export type NewUser = InferModel<typeof users, "insert">;
@@ -478,6 +611,14 @@ export type KnowledgeBase = InferModel<typeof knowledgeBase>;
 export type NewKnowledgeBase = InferModel<typeof knowledgeBase, "insert">;
 export type SustainabilityMetric = InferModel<typeof sustainabilityMetrics>;
 export type NewSustainabilityMetric = InferModel<typeof sustainabilityMetrics, "insert">;
+export type MarketingCampaign = InferModel<typeof marketingCampaigns>;
+export type NewMarketingCampaign = InferModel<typeof marketingCampaigns, "insert">;
+export type WebsiteContent = InferModel<typeof websiteContent>;
+export type NewWebsiteContent = InferModel<typeof websiteContent, "insert">;
+export type PortfolioProject = InferModel<typeof portfolioProjects>;
+export type NewPortfolioProject = InferModel<typeof portfolioProjects, "insert">;
+export type WebsiteEnquiry = InferModel<typeof websiteEnquiries>;
+export type NewWebsiteEnquiry = InferModel<typeof websiteEnquiries, "insert">;
 
 declare global {
   namespace Express {

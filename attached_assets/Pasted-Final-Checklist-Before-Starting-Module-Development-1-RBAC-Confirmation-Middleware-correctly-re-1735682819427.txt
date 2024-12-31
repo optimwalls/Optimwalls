@@ -1,0 +1,660 @@
+Final Checklist Before Starting Module Development
+	1.	RBAC Confirmation:
+	•	Middleware correctly restricts access based on roles and permissions.
+	•	Granular permissions are in place for CRUD operations and module-specific actions.
+	2.	Super Admin Validation:
+	•	Super Admin can:
+	•	Manage users and roles.
+	•	Configure modules and permissions dynamically.
+	•	Access logs and reports.
+	3.	Error Handling:
+	•	Ensure meaningful error messages for unauthorized access or system failures.
+	•	Centralized error logging for debugging and auditing.
+	4.	Scalable Database Design:
+	•	Relationships between users, roles, and permissions are normalized.
+	•	Indexes are implemented for frequent queries (e.g., role lookups).
+	5.	Documentation and ERD:
+	•	Document the current state of RBAC and Super Admin features.
+	•	Maintain an up-to-date Entity Relationship Diagram (ERD) for reference.
+    Best Practices for Module Development
+	1.	Start with Business-Critical Modules:
+	•	Begin with modules like CRM and Lead Management or Marketing, as they directly impact operations and revenue.
+	2.	Follow Modular Architecture:
+	•	Each module should:
+	•	Have its own database schema (or collection for NoSQL).
+	•	Include APIs, services, and controllers isolated from others.
+	•	Be independently testable.
+	3.	API Standards:
+	•	Use RESTful APIs or GraphQL for communication.
+	•	Adhere to consistent naming conventions (e.g., /api/v1/{module}).
+	4.	Frontend-Backend Integration:
+	•	Build modular, reusable components for the frontend.
+	•	Role-based UI rendering:
+	•	Super Admin sees all modules.
+	•	Other roles see only permitted modules.
+	5.	Scalability and Performance:
+	•	Use pagination for large datasets (e.g., leads or user lists).
+	•	Implement caching for frequent queries.
+	6.	Error and Event Logging:
+	•	Integrate tools like Sentry, Logstash, or Firebase for centralized logging.
+	7.	Testing and QA:
+	•	Use unit and integration tests for each module.
+	•	Include role-based test cases to ensure RBAC functionality.
+	8.	AI and Analytics:
+	•	If applicable, integrate basic AI/ML models for predictions (e.g., lead scoring).
+	•	Add analytics dashboards for insights into module performance.
+    Module Development Priorities
+
+1. CRM and Lead Management
+	•	Features:
+	•	Lead import/export, pipeline management, and activity tracking.
+	•	Best Practices:
+	•	Real-time notifications for lead updates.
+	•	Integration with email and SMS for follow-ups.
+
+2. Marketing
+	•	Features:
+	•	Campaign management and analytics.
+	•	Best Practices:
+	•	Automate recurring campaigns.
+	•	Integrate social media and ad platforms.
+
+3. Project Management
+	•	Features:
+	•	Gantt charts, task assignments, and real-time progress tracking.
+	•	Best Practices:
+	•	Enable drag-and-drop task management.
+	•	Allow parallel workflows for modular tasks.
+
+4. Quotation Management
+	•	Features:
+	•	Generate detailed quotes, including labor, materials, and margins.
+	•	Best Practices:
+	•	Allow Super Admin to configure tax rates and disclaimers.
+
+5. Dashboard and Reporting
+	•	Features:
+	•	Role-based KPIs and analytics.
+	•	Best Practices:
+	•	Use visualizations for better insights (e.g., bar charts, pie charts).
+	•	Aggregate data across modules.
+    Best-In-Industry Development Standards
+	•	Security:
+	•	Encrypt sensitive data (e.g., user credentials, session tokens).
+	•	Implement rate limiting and IP whitelisting for critical APIs.
+	•	Scalability:
+	•	Design with horizontal scaling in mind (e.g., microservices or serverless functions).
+	•	Use distributed databases or sharding for large datasets.
+	•	User Experience:
+	•	Maintain consistent UI/UX across modules.
+	•	Provide contextual help and tutorials for new features.
+	•	Documentation:
+	•	Document APIs with tools like Swagger or Postman.
+	•	Maintain version-controlled technical documentation.
+    1. Marketing Module
+
+Key Features:
+	1.	Campaign Management:
+	•	Automate email, SMS, and social campaigns.
+	•	Schedule campaigns with pre-configured templates.
+	2.	Lead Capture:
+	•	Multi-channel lead capture (web forms, social media, ads).
+	•	Real-time lead ingestion via APIs.
+	3.	Performance Analytics:
+	•	Automated tracking of ROI (e.g., cost per lead, conversions).
+
+Automation:
+	•	Lead Routing:
+	•	Automatically route leads to CRM based on:
+	•	Campaign source (e.g., Google Ads, LinkedIn).
+	•	Lead location, budget, or industry.
+	•	AI-Driven Segmentation:
+	•	Use AI to segment leads into priority buckets (e.g., high-value, medium-value).
+	•	Real-Time Notifications:
+	•	Notify sales teams of high-priority leads.
+
+UI/UX Recommendations:
+	1.	Dashboard:
+	•	Campaign performance visualized as graphs (e.g., bar charts for impressions, pie charts for conversions).
+	2.	Forms:
+	•	Minimalist, responsive lead forms.
+	3.	Real-Time Updates:
+	•	Display live lead counts and campaign performance.
+2. CRM Module
+
+Key Features:
+	1.	Lead Management:
+	•	Assign leads to sales reps automatically or manually.
+	•	Track interactions (e.g., calls, emails, meetings).
+	2.	Lead Scoring:
+	•	Automate lead scoring using AI based on:
+	•	Engagement (e.g., email opens, form submissions).
+	•	Attributes (e.g., budget, location).
+	3.	Conversion Tracking:
+	•	Convert leads to clients with a single click.
+
+Automation:
+	•	AI Recommendations:
+	•	Recommend next best actions (e.g., schedule follow-ups).
+	•	Pipeline Automation:
+	•	Auto-move leads through stages based on activity or time.
+	•	Follow-Up Reminders:
+	•	Automatically send reminders to reps for overdue follow-ups.
+
+UI/UX Recommendations:
+	1.	Kanban View:
+	•	Visualize lead progress in a drag-and-drop pipeline.
+	2.	Personalized Dashboards:
+	•	Show role-specific metrics (e.g., sales reps see personal targets, managers see team performance).
+	3.	Search and Filters:
+	•	Provide advanced search with dynamic filters (e.g., by status, campaign source).
+3. Design Module
+
+Key Features:
+	1.	Client Collaboration:
+	•	Share design mockups with clients for real-time feedback.
+	2.	Task Management:
+	•	Assign design tasks to team members.
+	3.	Progress Tracking:
+	•	Monitor project timelines and milestones.
+
+Automation:
+	•	Client Notifications:
+	•	Automatically notify clients of updates (e.g., new design uploads).
+	•	Task Assignment:
+	•	Auto-assign tasks based on workload or skill set.
+	•	Timeline Adjustments:
+	•	AI predicts delays based on past performance and suggests adjustments.
+
+UI/UX Recommendations:
+	1.	Client Portal:
+	•	Clean, intuitive interface for clients to review designs.
+	2.	Interactive Design Tools:
+	•	Allow clients to annotate designs directly in the portal.
+	3.	Progress Indicators:
+	•	Use progress bars and milestone trackers.
+Best Practices for Each Module
+1. Unified Architecture
+	•	Use a modular, service-oriented architecture to decouple modules.
+	•	Standardize APIs for seamless inter-module communication.
+
+2. Database Optimization
+	•	Normalize databases to avoid redundancy.
+	•	Use indexed columns for frequently queried fields (e.g., lead_status, campaign_source).
+
+3. Scalability
+	•	Deploy on a cloud-native platform (e.g., AWS, Azure, or GCP) for auto-scaling.
+	•	Use containerization (Docker + Kubernetes) for flexible deployments.
+
+4. Security
+	•	Implement role-based access control (RBAC) across modules.
+	•	Encrypt sensitive data in transit (SSL) and at rest.
+
+5. API Design
+	•	Follow REST or GraphQL standards.
+	•	Include rate limiting and throttling for high-volume endpoints.
+Automation and AI
+	1.	AI Models:
+	•	Lead Scoring: Predict conversion likelihood.
+	•	Campaign Optimization: Suggest best times to run campaigns based on past performance.
+	•	Design Insights: Recommend design templates based on client preferences.
+	2.	Workflow Automation:
+	•	Zapier/Custom Automation:
+	•	Connect marketing, CRM, and design tools to streamline workflows.
+	•	Event Triggers:
+	•	Example: A lead conversion triggers an automated task in the Design module.
+UI/UX Standards
+
+1. Design Principles
+	•	Use a mobile-first approach for responsive design.
+	•	Follow Material Design or Bootstrap for consistency.
+
+2. Visual Hierarchy
+	•	Highlight important metrics with bold fonts and vibrant colors.
+	•	Use subtle animations for transitions (e.g., loading spinners, tooltips).
+
+3. Accessibility
+	•	WCAG-compliant design for inclusivity.
+	•	Add alt text for images and keyboard navigability.
+Proposed Development Timeline
+	1.	Marketing Module: (2 weeks)
+	•	Campaign management, lead capture, API integration.
+	2.	CRM Module: (3 weeks)
+	•	Lead management, scoring, pipeline automation.
+	3.	Design Module: (3 weeks)
+	•	Client collaboration, task management, progress tracking.
+	4.	Integration and Testing: (2 weeks)
+	•	Connect modules, end-to-end workflow testing.
+
+The Marketing Module is designed to generate and manage leads through multi-channel campaigns, analyze campaign performance, and integrate seamlessly with the CRM for lead nurturing.
+Core Features of the Marketing Module
+	1.	Campaign Management:
+	•	Create and manage campaigns across email, SMS, and social media.
+	•	Schedule campaigns with reusable templates.
+	•	Monitor real-time performance metrics.
+	2.	Lead Capture:
+	•	Capture leads from web forms, social media, and integrations (e.g., Google Ads, LinkedIn).
+	•	Real-time ingestion of lead data.
+	3.	Analytics and Reporting:
+	•	Track campaign performance:
+	•	Impressions, clicks, conversions.
+	•	ROI (return on investment) and cost per lead (CPL).
+	4.	Automated Lead Routing:
+	•	Route leads to the CRM automatically based on rules:
+	•	Campaign source, location, budget, or preferences.
+	5.	AI-Powered Segmentation:
+	•	Group leads dynamically into buckets (e.g., high-value, cold leads).
+	•	Suggest audience adjustments for campaigns.
+CREATE TABLE Campaigns (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    type ENUM('email', 'sms', 'social'),
+    target_audience JSONB,
+    start_date TIMESTAMP,
+    end_date TIMESTAMP,
+    status ENUM('scheduled', 'active', 'completed'),
+    budget DECIMAL(10, 2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+API Endpoints:
+	•	POST /marketing/campaigns:
+	•	Create a new campaign.
+	•	GET /marketing/campaigns:
+	•	Fetch all campaigns with filters.
+	•	PATCH /marketing/campaigns/:id:
+	•	Update campaign status or details.
+
+Frontend:
+	•	Dashboard:
+	•	Card view of active, scheduled, and completed campaigns.
+	•	Campaign Creator:
+	•	Multi-step form to configure campaign details.
+2. Lead Capture
+
+Workflow:
+	1.	Leads are captured from various sources (forms, integrations, ads).
+	2.	Data is validated and enriched (e.g., deduplicated).
+	3.	Leads are routed to the CRM.
+
+Database Schema:
+CREATE TABLE Leads (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(15),
+    campaign_source VARCHAR(100),
+    status ENUM('new', 'contacted', 'qualified'),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+API Endpoints:
+	•	POST /marketing/leads:
+	•	Add a new lead.
+	•	GET /marketing/leads:
+	•	Fetch leads with filters (e.g., by campaign, status).
+
+Automation:
+	•	Use webhooks or APIs to push leads into the CRM:
+	•	Example:
+    {
+    "name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "1234567890",
+    "campaign_source": "Google Ads"
+}
+3. Analytics and Reporting
+
+Workflow:
+	1.	Campaign metrics are tracked (impressions, clicks, conversions).
+	2.	Data is aggregated and visualized.
+
+Database Schema:
+CREATE TABLE CampaignMetrics (
+    id SERIAL PRIMARY KEY,
+    campaign_id INT REFERENCES Campaigns(id),
+    metric_name VARCHAR(50),
+    metric_value DECIMAL(10, 2),
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+API Endpoints:
+	•	GET /marketing/campaigns/:id/metrics:
+	•	Fetch performance data for a campaign.
+
+Frontend:
+	•	Interactive charts and graphs:
+	•	Conversion funnel visualization.
+	•	ROI tracking.
+4. Automated Lead Routing
+
+Workflow:
+	1.	Leads are categorized based on rules (e.g., location, campaign type).
+	2.	Categorized leads are pushed to CRM automatically.
+
+Routing Logic Example:
+	•	If campaign source = “Google Ads” and location = “US”:
+	•	Assign to Sales Rep A.
+
+Automation Example:
+if (lead.campaignSource === 'Google Ads' && lead.location === 'US') {
+    assignTo('Sales Rep A');
+} else {
+    assignTo('General Pool');
+}
+API Endpoints:
+	•	POST /crm/leads:
+	•	Push leads to CRM.
+5. AI-Powered Segmentation
+
+Workflow:
+	1.	AI analyzes lead data to suggest segmentation.
+	2.	Segmentation groups are dynamically updated.
+
+AI Model:
+	•	Inputs:
+	•	Lead attributes (e.g., budget, location, engagement score).
+	•	Outputs:
+	•	Segmentation groups (e.g., high-value, medium-value, low-value).
+
+Automation Example:
+	•	Run AI model periodically:
+	•	Segments high-priority leads into a separate bucket.
+	•	Pushes notifications for follow-ups.
+Frontend Design
+	1.	Marketing Dashboard:
+	•	KPIs at a Glance:
+	•	Total leads generated.
+	•	Campaign ROI.
+	•	Average CPL (Cost Per Lead).
+	•	Active Campaigns:
+	•	Card-based layout with status and performance metrics.
+	2.	Lead Capture UI:
+	•	Simple, responsive forms.
+	•	Real-time validation for email and phone inputs.
+	3.	Analytics Page:
+	•	Graphs:
+	•	Bar charts for campaign performance.
+	•	Funnel visualization for lead flow.
+	•	Export Options:
+	•	Allow users to download reports in PDF/Excel formats.
+Automation and Best Practices
+	1.	Workflow Automation:
+	•	Use tools like Zapier or custom scripts for lead integration with CRM.
+	•	Schedule campaigns to run during optimal engagement times.
+	2.	API Rate Limiting:
+	•	Prevent misuse by setting limits (e.g., 100 requests/min).
+	3.	Caching:
+	•	Use Redis or similar for frequently accessed data (e.g., active campaigns).
+	4.	Testing:
+	•	Unit test all APIs and workflows.
+	•	Conduct A/B testing for campaign templates.
+	5.	Security:
+	•	Validate all inputs to prevent SQL injection or XSS.
+	•	Encrypt sensitive data (e.g., lead contact details).
+Development Plan
+	1.	Backend:
+	•	Build Campaigns, Leads, and Metrics tables.
+	•	Create APIs for campaign management and lead routing.
+	2.	Frontend:
+	•	Design responsive campaign management and analytics pages.
+	•	Integrate lead capture forms.
+	3.	Integration:
+	•	Test API connections between Marketing and CRM modules.
+To ensure OptimWalls achieves great success by generating high-quality leads, the Marketing Module must incorporate additional elements and enhancements beyond the core features already described. These additions will help optimize lead generation, improve targeting, and maximize conversion rates.
+
+Here’s a comprehensive enhancement plan to elevate the Marketing Module:
+Enhancements for High-Quality Lead Generation
+1. Advanced Targeting and Segmentation
+
+Purpose: Refine campaigns to attract high-quality leads by targeting the right audience.
+
+Features:
+	•	Behavior-Based Targeting:
+	•	Analyze user behavior (e.g., time spent on specific website pages, engagement with ads).
+	•	Geo-Targeting:
+	•	Deliver region-specific campaigns based on lead location.
+	•	Dynamic Segmentation:
+	•	Auto-update audience segments based on:
+	•	Engagement level (e.g., email clicks, form submissions).
+	•	Preferences (e.g., project type: residential vs. commercial).
+
+Automation:
+	•	Use AI to recommend audience segments for each campaign.
+	•	Auto-prioritize segments with higher engagement.
+
+Implementation:
+	•	Enhance the database schema to include:
+CREATE TABLE AudienceSegments (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    criteria JSONB, -- e.g., {"location": "Bangalore", "interest": "Luxury Interiors"}
+    leads_count INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+2. AI-Powered Campaign Optimization
+
+Purpose: Maximize lead generation by automating and optimizing campaign performance.
+
+Features:
+	•	AI-Driven Recommendations:
+	•	Suggest optimal campaign times, channels, and budgets based on past performance.
+	•	Predictive Analytics:
+	•	Forecast campaign outcomes (e.g., estimated CPL and ROI).
+	•	A/B Testing Automation:
+	•	Automatically test different creatives, subject lines, and messaging.
+
+Implementation:
+	•	Integrate AI/ML models for:
+	•	Campaign optimization.
+	•	Lead scoring.
+
+Automation:
+	•	Automatically adjust campaign budgets mid-campaign based on performance.
+3. Website Integration for Lead Capture
+
+Purpose: Leverage the OptimWalls website to capture leads effectively.
+
+Features:
+	•	Interactive Forms:
+	•	Dynamic forms tailored to user behavior (e.g., showing different questions for residential vs. commercial projects).
+	•	Exit Intent Pop-Ups:
+	•	Triggered when users are about to leave the website to capture their details.
+	•	Chatbot Integration:
+	•	AI chatbot (e.g., Opti) that collects lead information and answers questions.
+
+Implementation:
+	•	Database Schema:
+CREATE TABLE WebLeads (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100),
+    phone VARCHAR(15),
+    source ENUM('form', 'chatbot', 'popup'),
+    captured_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+	•	API Endpoints:
+	•	POST /website/leads: Accept lead data from forms, pop-ups, or chatbots.
+4. Multi-Channel Campaigns
+
+Purpose: Expand the reach of marketing efforts through multiple channels.
+
+Features:
+	•	Social Media Campaigns:
+	•	Automate posts and lead forms on Facebook, Instagram, and LinkedIn.
+	•	Google Ads Integration:
+	•	Create and manage ad campaigns directly from the marketing module.
+	•	Email and SMS Campaigns:
+	•	Personalized messaging with automated follow-ups.
+
+Automation:
+	•	Schedule multi-channel campaigns from a single interface.
+	•	Auto-sync campaign data (e.g., clicks, impressions) with the CRM.
+5. Content Personalization
+
+Purpose: Attract high-quality leads by delivering content tailored to their needs.
+
+Features:
+	•	Dynamic Content:
+	•	Display customized content (e.g., banners, videos) based on user profiles.
+	•	Personalized Emails:
+	•	Use placeholders to address leads by name and include project-specific details.
+
+Implementation:
+	•	Use a content management system (CMS) to store and deliver personalized assets.
+	•	Integrate email personalization tags (e.g., Dear {FirstName},).
+
+Purpose: Provide actionable insights to improve campaign effectiveness.
+
+Features:
+	•	Detailed Campaign Reports:
+	•	Breakdowns by channel, location, and audience.
+	•	Lead Quality Metrics:
+	•	Measure the quality of leads generated (e.g., conversion likelihood, engagement score).
+	•	Real-Time Dashboards:
+	•	Visualize performance KPIs like CPL, ROI, and conversion rates.
+
+Implementation:
+	•	Enhanced Schema:
+CREATE TABLE LeadQualityMetrics (
+    lead_id INT REFERENCES Leads(id),
+    engagement_score INT,
+    conversion_likelihood DECIMAL(3, 2),
+    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+	•	Visualization Tools:
+	•	Use libraries like Chart.js or D3.js to create interactive dashboards.
+7. Integration with CRM for Nurturing
+
+Purpose: Ensure smooth handoff of leads from Marketing to CRM for conversion.
+
+Workflow:
+	1.	Leads are enriched in the Marketing Module.
+	2.	Leads are pushed to the CRM with complete details:
+	•	Campaign source.
+	•	Engagement history.
+
+Automation:
+	•	Set up triggers to auto-push leads when:
+	•	Engagement score crosses a threshold.
+	•	Specific campaign goals are met (e.g., form submission).
+8. Continuous Improvement with Feedback Loops
+
+Purpose: Continuously improve marketing campaigns and lead quality.
+
+Features:
+	•	Collect feedback on:
+	•	Campaign effectiveness.
+	•	Lead conversion success rates from CRM.
+	•	Use insights to optimize future campaigns.
+Final Blueprint
+Feature Priority
+	1.	Advanced Targeting and Lead Capture (Website Integration).
+	2.	Multi-Channel Campaigns with Content Personalization.
+	3.	AI-Powered Campaign Optimization.
+	4.	Integration with CRM and Analytics.
+
+Best Practices
+	1.	Security:
+	•	Encrypt sensitive lead data (e.g., emails, phone numbers).
+	•	Use CAPTCHA to avoid bot submissions.
+	2.	UI/UX:
+	•	Ensure forms are intuitive and mobile-friendly.
+	•	Provide visual feedback (e.g., progress bars, thank-you messages) after lead submission.
+	3.	Automation:
+	•	Automate redundant tasks (e.g., follow-up emails, ad budget adjustments).
+	4.	Testing:
+	•	A/B test campaigns to identify top-performing strategies.
+
+Implementation Tools
+	•	Frontend:
+	•	React/Next.js for dynamic and responsive interfaces.
+	•	Backend:
+	•	Node.js or Flask for API development.
+	•	Database:
+	•	PostgreSQL for relational data or Firestore for flexible lead storage.
+	•	Integrations:
+	•	Google Ads API, Facebook Marketing API, SendGrid (emails).
+
+he Marketing Module blueprint provided earlier includes provisions for Role-Based Access Control (RBAC) and role-specific dashboards, but their actual implementation depends on your system’s RBAC middleware and dashboard rendering logic. Here’s a review of the Marketing Module with respect to RBAC and dashboards:
+1. RBAC in the Marketing Module
+
+Covered:
+	•	Permissions Based on Role:
+	•	Super Admin: Full access to campaigns, analytics, and integrations.
+	•	Admin: Manage campaigns, view analytics.
+	•	Employee: Read-only access to campaign performance related to their leads.
+
+RBAC Middleware Integration:
+
+If your system’s RBAC middleware is already implemented, the marketing module can leverage it directly by securing API endpoints and routes based on roles.
+
+Example RBAC Middleware Integration:
+app.use('/marketing/campaigns', RBACMiddleware(['Super Admin', 'Admin']));
+app.use('/marketing/reports', RBACMiddleware(['Super Admin', 'Admin', 'Employee']));
+Enhancement Needed:
+
+If RBAC middleware isn’t fully implemented:
+	1.	Ensure all APIs in the Marketing Module are secured with middleware.
+	2.	Define specific permissions for each role (e.g., “view_campaigns”, “edit_campaigns”).
+
+Permission Table Example:
+INSERT INTO Permissions (role_id, module_name, action, allowed)
+VALUES 
+(1, 'Marketing', 'view_campaigns', true),
+(2, 'Marketing', 'edit_campaigns', true),
+(3, 'Marketing', 'view_campaigns', false); -- Employee can only view campaigns
+2. Dashboards in the Marketing Module
+
+Covered:
+
+The blueprint includes:
+	•	Widgets for campaign performance metrics (impressions, clicks, conversions).
+	•	Filters for role-specific views (e.g., Super Admin sees all campaigns, Employees see relevant data).
+
+Enhancement Needed:
+
+To fully implement dynamic dashboards:
+	1.	Role-Specific Widgets:
+	•	Example:
+	•	Super Admin: Global metrics, top campaigns.
+	•	Admin: Campaigns they manage.
+	•	Employee: Campaigns related to their assigned leads.
+	2.	Dynamic Rendering:
+	•	Fetch user roles on login and render dashboard widgets accordingly.
+
+Example:
+const MarketingDashboard = ({ role }) => {
+    const widgets = [];
+
+    if (role === 'Super Admin') {
+        widgets.push(<GlobalCampaignMetrics />);
+        widgets.push(<TopCampaigns />);
+    } else if (role === 'Admin') {
+        widgets.push(<MyCampaignMetrics />);
+        widgets.push(<CampaignPerformance />);
+    } else if (role === 'Employee') {
+        widgets.push(<LeadCampaignPerformance />);
+    }
+
+    return <Dashboard widgets={widgets} />;
+};
+3. To-Do for Marketing Module (If Not Already Done)
+
+RBAC:
+	•	Audit all API endpoints in the Marketing Module.
+	•	Secure each endpoint with role-based middleware.
+	•	Test for unauthorized access scenarios.
+
+Dashboards:
+	•	Ensure dynamic rendering of dashboards based on roles.
+	•	Test the visibility of widgets:
+	•	Super Admin: Global metrics.
+	•	Admin: Campaigns they manage.
+	•	Employee: Read-only reports.
+Action Plan
+	1.	RBAC Audit:
+	•	Review the marketing module’s API and route protection.
+	•	Implement missing RBAC middleware if required.
+	2.	Dashboard Refinement:
+	•	Ensure role-based dynamic rendering.
+	•	Add missing widgets or refine widget logic.
