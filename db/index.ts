@@ -33,14 +33,11 @@ async function initializeDatabase(retries = 5, delay = 2000) {
     try {
       const client = await pool.connect();
       try {
-        await client.query('BEGIN');
         await client.query('SELECT 1');
-        await client.query('COMMIT');
-        console.log('Database connection and transaction support verified successfully');
+        console.log('Database connection verified successfully');
         client.release();
         return true;
       } catch (err) {
-        await client.query('ROLLBACK');
         client.release();
         throw err;
       }

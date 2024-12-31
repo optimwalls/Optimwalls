@@ -7,6 +7,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { sql } from "drizzle-orm";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,25 +33,23 @@ export async function setupDatabase() {
 
     // Initialize database schema
     try {
-      await db.query("BEGIN");
-
       // Execute initial migrations if needed
-      const [migrationCheck] = await db.query(`
+      const result = await db.execute(sql`
         SELECT EXISTS (
           SELECT 1 FROM information_schema.tables 
           WHERE table_schema = 'public' AND table_name = 'roles'
         );
       `);
 
-      if (!migrationCheck.exists) {
+      const tableExists = result[0]?.exists;
+
+      if (!tableExists) {
         log("Creating initial database structure...");
-        await db.query(initialMigration);
+        await db.execute(sql`${initialMigration}`);
       }
 
-      await db.query("COMMIT");
       log("Database schema initialization completed");
     } catch (error) {
-      await db.query("ROLLBACK");
       throw error;
     }
 
