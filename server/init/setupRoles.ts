@@ -1,6 +1,7 @@
 import { db } from "@db";
 import { roles, permissions, users } from "@db/schema";
 import { eq } from "drizzle-orm";
+import { log } from "../vite";
 
 const defaultRoles = [
   {
@@ -19,58 +20,62 @@ const defaultRoles = [
     name: "Manager",
     permissions: ["leads", "clients", "activities", "stats"].flatMap(resource =>
       ["create", "read", "update"].map(action => ({ resource, action }))
-    )
+    ).concat([
+      { resource: "users", action: "read" }
+    ])
   },
   {
     name: "Employee",
     permissions: [
       { resource: "leads", action: "read" },
       { resource: "leads", action: "update" },
+      { resource: "leads", action: "create" },
+      { resource: "clients", action: "read" },
       { resource: "activities", action: "create" },
       { resource: "activities", action: "read" },
-      { resource: "clients", action: "read" },
-      { resource: "stats", action: "read" },
+      { resource: "activities", action: "update" },
+      { resource: "stats", action: "read" }
     ]
   },
   {
     name: "Viewer",
     permissions: [
       { resource: "leads", action: "read" },
-      { resource: "activities", action: "read" },
       { resource: "clients", action: "read" },
-      { resource: "stats", action: "read" },
+      { resource: "activities", action: "read" },
+      { resource: "stats", action: "read" }
     ]
   }
 ];
 
 export async function setupRoles() {
   try {
+    log("Starting roles and permissions setup...");
+
     // First, clear existing permissions to avoid duplicates
     await db.delete(permissions);
+    log("Cleared existing permissions");
 
-    // Create roles if they don't exist
     for (const roleData of defaultRoles) {
-      let role;
-
       // Check if role exists
-      const [existingRole] = await db
+      let [role] = await db
         .select()
         .from(roles)
         .where(eq(roles.name, roleData.name))
         .limit(1);
 
-      if (existingRole) {
-        role = existingRole;
-      } else {
-        // Create new role
-        const [newRole] = await db
+      if (!role) {
+        // Create new role if it doesn't exist
+        [role] = await db
           .insert(roles)
           .values({ 
             name: roleData.name,
             createdAt: new Date()
           })
           .returning();
-        role = newRole;
+        log(`Created role: ${roleData.name}`);
+      } else {
+        log(`Role ${roleData.name} already exists`);
       }
 
       // Add permissions for the role
@@ -81,9 +86,12 @@ export async function setupRoles() {
         createdAt: new Date()
       }));
 
-      await db.insert(permissions).values(permissionValues);
+      if (permissionValues.length > 0) {
+        await db.insert(permissions).values(permissionValues);
+        log(`Added ${permissionValues.length} permissions for role: ${roleData.name}`);
+      }
 
-      // If this is SuperAdmin role, ensure the nizam.superadmin user has this role
+      // If this is SuperAdmin role, ensure the superadmin user has this role
       if (roleData.name === "SuperAdmin") {
         const [superAdmin] = await db
           .select()
@@ -96,11 +104,12 @@ export async function setupRoles() {
             .update(users)
             .set({ roleId: role.id })
             .where(eq(users.id, superAdmin.id));
+          log("Updated superadmin user role");
         }
       }
     }
 
-    console.log("Roles and permissions initialized successfully");
+    log("Roles and permissions initialization completed successfully");
   } catch (error) {
     console.error("Error setting up roles:", error);
     throw error;

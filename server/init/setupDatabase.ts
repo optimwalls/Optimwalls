@@ -20,18 +20,29 @@ export async function setupDatabase() {
 
     if (!superadmin) {
       // Create superadmin if it doesn't exist
-      await db.insert(users).values({
+      const [newUser] = await db.insert(users).values({
         username: "nizam.superadmin",
         password: "superadmin", // This should be properly hashed in production
-        roleId: 1, // Will be updated by setupRoles
+        roleId: 1, // SuperAdmin role
         createdAt: new Date(),
         updatedAt: new Date(),
-      });
-      log("Superadmin user created");
+      }).returning();
+
+      if (newUser) {
+        log("Superadmin user created successfully");
+      }
+    } else {
+      log("Superadmin user already exists");
     }
 
     return true;
-  } catch (error) {
+  } catch (error: any) {
+    // If error is about missing table, it means we need to initialize the database
+    if (error.message.includes('relation "users" does not exist')) {
+      log("Database tables don't exist, will be created during role setup");
+      return true;
+    }
+
     console.error("Database setup failed:", error);
     throw error;
   }

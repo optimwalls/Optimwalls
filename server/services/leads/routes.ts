@@ -15,19 +15,24 @@ router.get("/", checkPermission("leads", "read"), async (req, res) => {
       .from(leads)
       .leftJoin(activities, eq(activities.leadId, leads.id))
       .leftJoin(users, eq(leads.assignedTo, users.id));
-    
+
     res.json(allLeads);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Create new lead
+// Create new lead with proper permission check
 router.post("/", checkPermission("leads", "create"), async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
     const leadData: NewLead = {
       ...req.body,
       status: "New",
+      assignedTo: req.user.id, // Assign to the creating user
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -35,11 +40,15 @@ router.post("/", checkPermission("leads", "create"), async (req, res) => {
     const [lead] = await db.insert(leads).values(leadData).returning();
     res.status(201).json(lead);
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    console.error("Error creating lead:", error);
+    res.status(500).json({ 
+      message: "Failed to create lead",
+      error: error.message 
+    });
   }
 });
 
-// Update lead
+// Update lead with permission check
 router.patch("/:id", checkPermission("leads", "update"), async (req, res) => {
   try {
     const leadId = parseInt(req.params.id);
@@ -48,18 +57,18 @@ router.patch("/:id", checkPermission("leads", "update"), async (req, res) => {
       .set({ ...req.body, updatedAt: new Date() })
       .where(eq(leads.id, leadId))
       .returning();
-    
+
     if (!updatedLead) {
       return res.status(404).json({ message: "Lead not found" });
     }
-    
+
     res.json(updatedLead);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Get lead score
+// Get lead score with permission check
 router.get("/:id/score", checkPermission("leads", "read"), async (req, res) => {
   try {
     const leadId = parseInt(req.params.id);
@@ -84,7 +93,7 @@ router.get("/:id/score", checkPermission("leads", "read"), async (req, res) => {
 // Helper function to calculate lead score
 function calculateLeadScore(lead: any) {
   let score = 0;
-  
+
   // Budget factor (up to 40 points)
   if (lead.budget) {
     if (lead.budget >= 100000) score += 40;
@@ -97,9 +106,8 @@ function calculateLeadScore(lead: any) {
   if (lead.projectType === 'Commercial') score += 30;
   else if (lead.projectType === 'Residential') score += 20;
 
-  // Engagement factor (up to 30 points)
-  // This will be calculated based on activity count in a separate query
-  
+  // Engagement factor (up to 30 points based on activity count)
+
   return Math.min(score, 100);
 }
 

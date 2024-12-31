@@ -2,15 +2,15 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupRoles } from "./init/setupRoles";
-import { setupAuth } from "./auth";
 import { setupDatabase } from "./init/setupDatabase";
-import { db } from "@db";
 
 const app = express();
+
+// Basic middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Logging middleware
+// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -29,21 +29,28 @@ app.use((req, res, next) => {
       if (capturedJsonResponse) {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
-
       if (logLine.length > 80) {
         logLine = logLine.slice(0, 79) + "…";
       }
-
       log(logLine);
     }
   });
-
   next();
 });
 
+// Global error handling middleware
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({
+    message: err.message,
+    ...(app.get('env') === 'development' ? { stack: err.stack } : {})
+  });
+});
+
+// Initialize application
 (async () => {
   try {
-    // Initialize database and ensure superadmin exists
+    // Initialize database
     await setupDatabase();
     log("Database setup complete");
 
@@ -51,30 +58,20 @@ app.use((req, res, next) => {
     await setupRoles();
     log("Roles and permissions initialized");
 
-    // Setup authentication after roles are initialized
-    setupAuth(app);
-    log("Authentication setup complete");
-
+    // Register routes after all initialization is complete
     const server = registerRoutes(app);
 
-    // Error handling middleware
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
-
-      res.status(status).json({ message });
-      console.error(err);
-    });
-
+    // Setup Vite or static files based on environment
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
       serveStatic(app);
     }
 
+    // Start server
     const PORT = 5000;
     server.listen(PORT, "0.0.0.0", () => {
-      log(`serving on port ${PORT}`);
+      log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error);

@@ -21,7 +21,7 @@ export const roles = pgTable("roles", {
 export const permissions = pgTable("permissions", {
   id: serial("id").primaryKey(),
   roleId: integer("role_id").references(() => roles.id).notNull(),
-  resource: text("resource").notNull(), // e.g., "leads", "users"
+  resource: text("resource").notNull(), // e.g., "leads", "users", "clients", "activities"
   action: text("action").notNull(), // "create", "read", "update", "delete"
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -62,7 +62,13 @@ export const clients = pgTable("clients", {
   email: text("email"),
   phone: text("phone"),
   location: text("location"),
-  projectDetails: json("project_details"),
+  projectDetails: json("project_details").$type<{
+    type: string;
+    value: number;
+    status: string;
+    startDate?: string;
+    endDate?: string;
+  }>(),
   assignedTo: integer("assigned_to").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -74,6 +80,11 @@ export const usersRelations = relations(users, ({ one }) => ({
     fields: [users.roleId],
     references: [roles.id],
   }),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  permissions: many(permissions),
+  users: many(users),
 }));
 
 export const leadsRelations = relations(leads, ({ one, many }) => ({
@@ -119,6 +130,10 @@ export const insertActivitySchema = createInsertSchema(activities);
 export const selectActivitySchema = createSelectSchema(activities);
 export const insertClientSchema = createInsertSchema(clients);
 export const selectClientSchema = createSelectSchema(clients);
+export const insertRoleSchema = createInsertSchema(roles);
+export const selectRoleSchema = createSelectSchema(roles);
+export const insertPermissionSchema = createInsertSchema(permissions);
+export const selectPermissionSchema = createSelectSchema(permissions);
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -130,16 +145,19 @@ export type NewActivity = typeof activities.$inferInsert;
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
 export type Role = typeof roles.$inferSelect;
+export type NewRole = typeof roles.$inferInsert;
+export type Permission = typeof permissions.$inferSelect;
+export type NewPermission = typeof permissions.$inferInsert;
 
-// Fix the Express User type declaration to avoid circular reference
+// Fix the Express User type declaration
 declare global {
   namespace Express {
     interface User {
       id: number;
       username: string;
       roleId: number;
-      createdAt?: Date;
-      updatedAt?: Date;
+      createdAt: Date;
+      updatedAt: Date;
     }
   }
 }
