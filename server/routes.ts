@@ -24,10 +24,10 @@ export function registerRoutes(app: Express): Server {
     }),
   }));
 
-  // Set up authentication before routes
+  // Set up authentication before other routes
   setupAuth(app);
 
-  // Register API routes
+  // Register API routes with their respective prefixes
   app.use("/api/auth", authRoutes);
   app.use("/api/leads", leadRoutes);
   app.use("/api/clients", clientRoutes);
