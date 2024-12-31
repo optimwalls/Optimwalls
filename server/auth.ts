@@ -12,7 +12,7 @@ import { eq } from "drizzle-orm";
 const scryptAsync = promisify(scrypt);
 
 // Crypto utilities for password handling
-const crypto = {
+export const crypto = {
   hash: async (password: string) => {
     const salt = randomBytes(16).toString("hex");
     const buf = (await scryptAsync(password, salt, 64)) as Buffer;
