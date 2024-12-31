@@ -4,14 +4,17 @@ import { db } from "@db";
 import { users, roles } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "../vite";
+import { crypto } from "../auth";
 
 export async function setupDatabase() {
   try {
-    // Check if we can connect to the database
-    const [testConnection] = await db.select().from(users).limit(1);
-    log("Database connection successful");
+    log("Starting database setup...");
 
-    // Check if superadmin exists
+    // Run migrations
+    await migrate(db, { migrationsFolder: "./migrations" });
+    log("Database migrations completed");
+
+    // Check for superadmin
     const [superadmin] = await db
       .select()
       .from(users)
@@ -20,10 +23,13 @@ export async function setupDatabase() {
 
     if (!superadmin) {
       // Create superadmin if it doesn't exist
+      const hashedPassword = await crypto.hash("superadmin");
       const [newUser] = await db.insert(users).values({
         username: "nizam.superadmin",
-        password: "superadmin", // This should be properly hashed in production
+        password: hashedPassword,
         roleId: 1, // SuperAdmin role
+        email: "superadmin@optimwalls.com",
+        fullName: "Nizam Super Admin",
         createdAt: new Date(),
         updatedAt: new Date(),
       }).returning();
@@ -37,7 +43,7 @@ export async function setupDatabase() {
 
     return true;
   } catch (error: any) {
-    // If error is about missing table, it means we need to initialize the database
+    // If error is about missing tables, they will be created by migrations
     if (error.message.includes('relation "users" does not exist')) {
       log("Database tables don't exist, will be created during role setup");
       return true;

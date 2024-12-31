@@ -6,35 +6,117 @@ import { log } from "../vite";
 const defaultRoles = [
   {
     name: "SuperAdmin",
-    permissions: ["leads", "users", "clients", "activities", "stats"].flatMap(resource =>
+    permissions: [
+      "leads", "users", "clients", "activities", "stats",
+      "hr", "finance", "production", "vendors", "quotations",
+      "designs", "projects", "support", "knowledge", "sustainability",
+      "reports", "website"
+    ].flatMap(resource =>
       ["create", "read", "update", "delete"].map(action => ({ resource, action }))
     )
   },
   {
-    name: "Admin",
-    permissions: ["leads", "users", "clients", "activities", "stats"].flatMap(resource =>
+    name: "CEO",
+    permissions: [
+      "leads", "users", "clients", "activities", "stats",
+      "hr", "finance", "production", "vendors", "quotations",
+      "designs", "projects", "support", "knowledge", "sustainability",
+      "reports", "website"
+    ].flatMap(resource =>
       ["create", "read", "update", "delete"].map(action => ({ resource, action }))
     )
   },
   {
-    name: "Manager",
-    permissions: ["leads", "clients", "activities", "stats"].flatMap(resource =>
+    name: "DepartmentHead",
+    permissions: [
+      "leads", "clients", "activities", "stats",
+      "hr", "production", "vendors", "quotations",
+      "designs", "projects", "support", "knowledge",
+      "reports"
+    ].flatMap(resource =>
       ["create", "read", "update"].map(action => ({ resource, action }))
     ).concat([
       { resource: "users", action: "read" }
     ])
   },
   {
+    name: "HRManager",
+    permissions: [
+      { resource: "hr", action: "create" },
+      { resource: "hr", action: "read" },
+      { resource: "hr", action: "update" },
+      { resource: "hr", action: "delete" },
+      { resource: "users", action: "read" },
+      { resource: "reports", action: "read" },
+      { resource: "knowledge", action: "read" },
+    ]
+  },
+  {
+    name: "FinanceManager",
+    permissions: [
+      { resource: "finance", action: "create" },
+      { resource: "finance", action: "read" },
+      { resource: "finance", action: "update" },
+      { resource: "finance", action: "delete" },
+      { resource: "quotations", action: "read" },
+      { resource: "quotations", action: "update" },
+      { resource: "reports", action: "read" },
+      { resource: "vendors", action: "read" },
+    ]
+  },
+  {
+    name: "ProjectManager",
+    permissions: [
+      { resource: "projects", action: "create" },
+      { resource: "projects", action: "read" },
+      { resource: "projects", action: "update" },
+      { resource: "production", action: "create" },
+      { resource: "production", action: "read" },
+      { resource: "production", action: "update" },
+      { resource: "sustainability", action: "read" },
+      { resource: "sustainability", action: "update" },
+      { resource: "vendors", action: "read" },
+      { resource: "reports", action: "read" },
+      { resource: "knowledge", action: "read" },
+    ]
+  },
+  {
+    name: "DesignManager",
+    permissions: [
+      { resource: "designs", action: "create" },
+      { resource: "designs", action: "read" },
+      { resource: "designs", action: "update" },
+      { resource: "designs", action: "delete" },
+      { resource: "projects", action: "read" },
+      { resource: "knowledge", action: "read" },
+      { resource: "knowledge", action: "create" },
+      { resource: "reports", action: "read" },
+    ]
+  },
+  {
+    name: "SupportManager",
+    permissions: [
+      { resource: "support", action: "create" },
+      { resource: "support", action: "read" },
+      { resource: "support", action: "update" },
+      { resource: "support", action: "delete" },
+      { resource: "clients", action: "read" },
+      { resource: "knowledge", action: "read" },
+      { resource: "knowledge", action: "create" },
+      { resource: "reports", action: "read" },
+    ]
+  },
+  {
     name: "Employee",
     permissions: [
       { resource: "leads", action: "read" },
       { resource: "leads", action: "update" },
-      { resource: "leads", action: "create" },
       { resource: "clients", action: "read" },
       { resource: "activities", action: "create" },
       { resource: "activities", action: "read" },
       { resource: "activities", action: "update" },
-      { resource: "stats", action: "read" }
+      { resource: "knowledge", action: "read" },
+      { resource: "reports", action: "read" }
     ]
   },
   {
@@ -43,7 +125,7 @@ const defaultRoles = [
       { resource: "leads", action: "read" },
       { resource: "clients", action: "read" },
       { resource: "activities", action: "read" },
-      { resource: "stats", action: "read" }
+      { resource: "knowledge", action: "read" }
     ]
   }
 ];
