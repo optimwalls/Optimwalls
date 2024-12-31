@@ -130,3 +130,16 @@ export type NewActivity = typeof activities.$inferInsert;
 export type Client = typeof clients.$inferSelect;
 export type NewClient = typeof clients.$inferInsert;
 export type Role = typeof roles.$inferSelect;
+
+// Fix the Express User type declaration to avoid circular reference
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      username: string;
+      roleId: number;
+      createdAt?: Date;
+      updatedAt?: Date;
+    }
+  }
+}

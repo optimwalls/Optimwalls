@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupRoles } from "./init/setupRoles";
 import { setupAuth } from "./auth";
+import { setupDatabase } from "./init/setupDatabase";
 import { db } from "@db";
 
 const app = express();
@@ -42,11 +43,15 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // Initialize database and ensure superadmin exists
+    await setupDatabase();
+    log("Database setup complete");
+
     // Initialize roles and permissions
     await setupRoles();
     log("Roles and permissions initialized");
 
-    // Setup authentication
+    // Setup authentication after roles are initialized
     setupAuth(app);
     log("Authentication setup complete");
 
