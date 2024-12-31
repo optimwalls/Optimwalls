@@ -1,62 +1,89 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import pkg from 'pg';
+const { Pool } = pkg;
+import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@db/schema";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
-  );
-}
-
-// Create a new postgres client with SSL configuration
-const queryClient = postgres(process.env.DATABASE_URL, { 
-  ssl: 'require',
-  max: 1,
-  idle_timeout: 20,
-  connect_timeout: 10
+// Basic configuration without any extras
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL
 });
 
-// Initialize database connection with detailed logging
+// Test connection immediately and log details
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('Initial connection error:', err);
+    console.error('Connection details:', {
+      host: process.env.PGHOST,
+      port: process.env.PGPORT,
+      database: process.env.PGDATABASE,
+      user: process.env.PGUSER,
+    });
+    return;
+  }
+
+  client.query('SELECT version()', (err, result) => {
+    release();
+    if (err) {
+      console.error('Query error:', err);
+      return;
+    }
+    console.log('Connected to PostgreSQL:', result.rows[0]);
+  });
+});
+
+// Initialize Drizzle with the schema
+export const db = drizzle(pool, { schema });
+
+// Basic initialization function
 export async function initDb() {
-  console.log('Initializing database connection...');
   try {
-    await queryClient`SELECT 1`;
-    console.log('Database connection verified successfully');
-    return true;
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT version()');
+      console.log('Database connection verified');
+      return true;
+    } finally {
+      client.release();
+    }
   } catch (err) {
-    console.error('Failed to connect to database:', err);
+    console.error('Database initialization failed:', err);
     throw err;
   }
 }
 
-// Initialize Drizzle with the schema
-export const db = drizzle(queryClient, { schema });
-
-// Handle process termination gracefully
-process.on('SIGTERM', async () => {
-  await queryClient.end();
-  console.log('Database connection closed');
-  process.exit(0);
+// Clean up on shutdown
+process.on('SIGTERM', () => {
+  pool.end();
 });
 
-// Handle unexpected errors
-process.on('unhandledRejection', async (err) => {
-  console.error('Unhandled rejection:', err);
-  await queryClient.end();
-  process.exit(-1);
+
+// Handle pool errors
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
 });
 
 // Export transaction helper
 export async function withTransaction<T>(
-  callback: (tx: any) => Promise<T>
+  callback: (client: any) => Promise<T>
 ): Promise<T> {
-  const tx = await queryClient.begin();
+  const client = await pool.connect();
   try {
-    const result = await callback(tx);
-    await tx.commit();
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
     return result;
   } catch (err) {
-    await tx.rollback();
+    await client.query('ROLLBACK');
     throw err;
+  } finally {
+    client.release();
   }
 }
+
+
+// Handle unexpected errors
+process.on('unhandledRejection', async (err) => {
+  console.error('Unhandled rejection:', err);
+  await pool.end();
+  process.exit(-1);
+});
