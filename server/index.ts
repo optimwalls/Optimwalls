@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeRBAC } from "./init/rbac";
 import { initDb } from "@db";
+import { setupDatabase } from "./init/setupDatabase";
 
 const app = express();
 
@@ -39,44 +40,59 @@ app.use((req, res, next) => {
 });
 
 // Global error handling middleware
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error("Unhandled error:", err);
   res.status(500).json({
     message: err.message,
     ...(app.get('env') === 'development' ? { stack: err.stack } : {})
   });
-});
+};
 
-// Initialize application
-(async () => {
+app.use(errorHandler);
+
+// Initialize application with proper sequencing
+async function startServer() {
   try {
-    // Initialize database first
+    // Step 1: Initialize database connection
     log("Starting database initialization...");
     await initDb();
     log("Database initialization completed");
 
-    // Initialize RBAC after database is ready
+    // Step 2: Run database setup and migrations
+    log("Starting database setup and migrations...");
+    await setupDatabase();
+    log("Database setup and migrations completed");
+
+    // Step 3: Initialize RBAC after database is ready
     log("Starting roles and permissions initialization...");
     await initializeRBAC();
     log("Roles and permissions initialization completed");
 
-    // Register routes after all initialization is complete
+    // Step 4: Register routes after all initialization is complete
     const server = registerRoutes(app);
 
-    // Setup Vite or static files based on environment
+    // Step 5: Setup Vite or static files based on environment
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
       serveStatic(app);
     }
 
-    // Start server
+    // Step 6: Start server
     const PORT = 5000;
     server.listen(PORT, "0.0.0.0", () => {
       log(`Server running on port ${PORT}`);
     });
+
+    return server;
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
   }
-})();
+}
+
+// Start the server
+startServer().catch((error) => {
+  console.error("Critical error during server startup:", error);
+  process.exit(1);
+});

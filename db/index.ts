@@ -7,17 +7,25 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Validate required environment variables
-if (!process.env.DATABASE_URL) {
-  throw new Error(`Missing required environment variable: DATABASE_URL`);
+const requiredEnvVars = ['DATABASE_URL', 'PGHOST', 'PGDATABASE', 'PGUSER', 'PGPASSWORD', 'PGPORT'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required environment variable: ${envVar}`);
+  }
 }
 
 const { Pool } = pg;
 
 // Create PostgreSQL pool with proper configuration
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  host: process.env.PGHOST,
+  database: process.env.PGDATABASE,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+  port: parseInt(process.env.PGPORT),
   ssl: {
-    rejectUnauthorized: false // Required for some PostgreSQL providers
+    rejectUnauthorized: true,
+    sslmode: 'require'
   },
   max: 20, // Maximum number of clients in the pool
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
@@ -31,6 +39,7 @@ export const db = drizzle(pool, { schema });
 async function initializeDatabase(retries = 5, delay = 2000) {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
+      console.log(`Database connection attempt ${attempt}/${retries}...`);
       const client = await pool.connect();
       try {
         await client.query('SELECT 1');
@@ -41,8 +50,8 @@ async function initializeDatabase(retries = 5, delay = 2000) {
         client.release();
         throw err;
       }
-    } catch (err) {
-      console.error(`Database connection attempt ${attempt}/${retries} failed:`, err);
+    } catch (err: any) {
+      console.error(`Database connection attempt ${attempt}/${retries} failed:`, err.message);
       if (attempt === retries) {
         console.error('Failed to connect to database after all retries');
         return false;
@@ -56,6 +65,7 @@ async function initializeDatabase(retries = 5, delay = 2000) {
 // Initialize database connection with detailed logging
 export async function initDb() {
   console.log('Initializing database connection...');
+  console.log(`Connecting to database at ${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`);
   const success = await initializeDatabase();
   if (!success) {
     throw new Error('Failed to initialize database connection');

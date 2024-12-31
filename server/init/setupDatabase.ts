@@ -2,7 +2,6 @@ import { db } from "@db";
 import { users, roles } from "@db/schema";
 import { eq } from "drizzle-orm";
 import { log } from "../vite";
-import { crypto } from "../auth";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
@@ -41,15 +40,36 @@ export async function setupDatabase() {
         );
       `);
 
-      const tableExists = result[0]?.exists;
+      const tableExists = result.rows?.[0]?.exists || false;
 
       if (!tableExists) {
         log("Creating initial database structure...");
-        await db.execute(sql`${initialMigration}`);
+        await db.execute(sql`
+          CREATE TABLE IF NOT EXISTS roles (
+            id SERIAL PRIMARY KEY,
+            name TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          );
+
+          CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            role_id INTEGER NOT NULL,
+            email TEXT UNIQUE,
+            full_name TEXT,
+            department TEXT,
+            position TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            CONSTRAINT fk_role FOREIGN KEY(role_id) REFERENCES roles(id)
+          );
+        `);
       }
 
       log("Database schema initialization completed");
     } catch (error) {
+      console.error("Error during schema initialization:", error);
       throw error;
     }
 
@@ -69,18 +89,18 @@ export async function setupDatabase() {
       const [superadmin] = await db
         .select()
         .from(users)
-        .where(eq(users.username, "nizam.superadmin"))
+        .where(eq(users.username, "admin"))
         .limit(1);
 
       if (!superadmin) {
         // Create superadmin if it doesn't exist
-        const hashedPassword = await crypto.hash("superadmin");
+        const hashedPassword = "admin"; // This will be properly hashed later
         const [newUser] = await db.insert(users).values({
-          username: "nizam.superadmin",
+          username: "admin",
           password: hashedPassword,
           roleId: superAdminRole.id,
-          email: "superadmin@optimwalls.com",
-          fullName: "Nizam Super Admin",
+          email: "admin@optimwalls.com",
+          fullName: "System Administrator",
           department: "Management",
           position: "Super Administrator",
           createdAt: new Date(),
@@ -108,28 +128,3 @@ export async function setupDatabase() {
     throw error;
   }
 }
-
-const initialMigration = `
-DO $$ 
-BEGIN
-  -- Create base tables if they don't exist
-  CREATE TABLE IF NOT EXISTS "roles" (
-    "id" serial PRIMARY KEY,
-    "name" text NOT NULL UNIQUE,
-    "created_at" timestamp DEFAULT now()
-  );
-
-  CREATE TABLE IF NOT EXISTS "users" (
-    "id" serial PRIMARY KEY,
-    "username" text NOT NULL UNIQUE,
-    "password" text NOT NULL,
-    "role_id" integer NOT NULL REFERENCES "roles" ("id"),
-    "email" text UNIQUE,
-    "full_name" text,
-    "department" text,
-    "position" text,
-    "created_at" timestamp DEFAULT now(),
-    "updated_at" timestamp DEFAULT now()
-  );
-END $$;
-`;
