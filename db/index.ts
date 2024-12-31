@@ -1,10 +1,17 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from 'pg';
+import pg from 'pg';
 import * as schema from "@db/schema";
+import dotenv from 'dotenv';
 
+// Load environment variables
+dotenv.config();
+
+// Validate required environment variables
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required");
+  throw new Error(`Missing required environment variable: DATABASE_URL`);
 }
+
+const { Pool } = pg;
 
 // Create PostgreSQL pool with proper configuration
 const pool = new Pool({
@@ -26,14 +33,14 @@ async function initializeDatabase(retries = 5, delay = 2000) {
     try {
       const client = await pool.connect();
       try {
-        await client.query('BEGIN'); //Added from original code for transaction testing
-        await client.query('SELECT 1'); // Simple query to test connection
-        await client.query('COMMIT'); //Added from original code for transaction testing
-        console.log('Database connection and transaction support verified successfully'); //Modified to reflect transaction test
+        await client.query('BEGIN');
+        await client.query('SELECT 1');
+        await client.query('COMMIT');
+        console.log('Database connection and transaction support verified successfully');
         client.release();
         return true;
       } catch (err) {
-        await client.query('ROLLBACK'); //Added from original code for transaction rollback
+        await client.query('ROLLBACK');
         client.release();
         throw err;
       }
@@ -49,8 +56,9 @@ async function initializeDatabase(retries = 5, delay = 2000) {
   return false;
 }
 
-// Initialize database connection
+// Initialize database connection with detailed logging
 export async function initDb() {
+  console.log('Initializing database connection...');
   const success = await initializeDatabase();
   if (!success) {
     throw new Error('Failed to initialize database connection');
@@ -79,7 +87,7 @@ process.on('unhandledRejection', (err) => {
   });
 });
 
-// Export transaction helper (from original code)
+// Export transaction helper
 export async function withTransaction<T>(
   callback: (client: any) => Promise<T>
 ): Promise<T> {
