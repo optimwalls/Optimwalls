@@ -4,45 +4,43 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "@db/schema";
 import { log } from "../server/vite";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is required for database connection");
-}
-
-// Configuration for Replit PostgreSQL
-const poolConfig = {
+// Basic database connection configuration
+const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: 20, // Maximum number of clients in the pool
+  max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-};
+  connectionTimeoutMillis: 2000,
+  ssl: {
+    rejectUnauthorized: false // Required for Railway's SSL connection
+  }
+});
 
-// Create the connection pool
-const pool = new Pool(poolConfig);
-
-// Test connection immediately and log details
 pool.on('connect', () => {
-  log('New client connected to the database');
+  log('PostgreSQL client connected to database');
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
+  console.error('Unexpected error on idle client:', err);
   process.exit(-1);
 });
 
 // Initialize Drizzle with the schema
 export const db = drizzle(pool, { schema });
 
-// Basic initialization function with better error handling
+// Initialize database
 export async function initDb() {
   let client;
   try {
+    log('Attempting to connect to PostgreSQL...');
+    console.log('Using connection URL:', process.env.DATABASE_URL ? 'Present (URL hidden for security)' : 'Missing');
+
     client = await pool.connect();
     const result = await client.query('SELECT version()');
-    log('Database connection established');
+    log('Database connection successful');
     log(`PostgreSQL version: ${result.rows[0].version}`);
     return true;
   } catch (err) {
-    console.error('Database initialization failed:', err);
+    console.error('Database connection failed:', err);
     throw err;
   } finally {
     if (client) {
@@ -51,7 +49,7 @@ export async function initDb() {
   }
 }
 
-// Clean up on shutdown
+// Clean up resources on shutdown
 process.on('SIGTERM', async () => {
   try {
     await pool.end();
@@ -61,7 +59,7 @@ process.on('SIGTERM', async () => {
   }
 });
 
-// Export transaction helper with improved error handling
+// Helper for database transactions
 export async function withTransaction<T>(
   callback: (client: any) => Promise<T>
 ): Promise<T> {
