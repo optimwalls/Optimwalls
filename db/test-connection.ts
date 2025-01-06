@@ -4,14 +4,14 @@ const { Client } = pkg;
 async function testConnection() {
   console.log('Testing database connection...');
   console.log('Connection parameters:');
-  console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Present' : 'Missing');
-  console.log('Host:', process.env.PGHOST);
-  console.log('Port:', process.env.PGPORT);
-  console.log('Database:', process.env.PGDATABASE);
-  console.log('User:', process.env.PGUSER);
+  console.log('DATABASE_PUBLIC_URL:', process.env.DATABASE_PUBLIC_URL ? 'Present' : 'Missing');
+
+  if (!process.env.DATABASE_PUBLIC_URL) {
+    throw new Error('DATABASE_PUBLIC_URL environment variable is required');
+  }
 
   const client = new Client({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: process.env.DATABASE_PUBLIC_URL,
     ssl: {
       rejectUnauthorized: false
     }

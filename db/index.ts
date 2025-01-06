@@ -6,7 +6,7 @@ import { log } from "../server/vite";
 
 // Basic database connection configuration
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: process.env.DATABASE_PUBLIC_URL,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
@@ -32,7 +32,7 @@ export async function initDb() {
   let client;
   try {
     log('Attempting to connect to PostgreSQL...');
-    console.log('Using connection URL:', process.env.DATABASE_URL ? 'Present (URL hidden for security)' : 'Missing');
+    console.log('Using connection URL:', process.env.DATABASE_PUBLIC_URL ? 'Present (URL hidden for security)' : 'Missing');
 
     client = await pool.connect();
     const result = await client.query('SELECT version()');
